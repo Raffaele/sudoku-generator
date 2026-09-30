@@ -1,55 +1,58 @@
-import { StyleSheet, Text, View } from '@react-pdf/renderer'
-import type { Grid } from '../lib/sudoku-generator'
+import { Line, Rect, Svg, Text } from '@react-pdf/renderer'
+import { FONT_BOLD, FONT_REGULAR } from '../fonts.ts'
+import type { Grid } from '../lib/sudoku-generator.ts'
 
-const THIN = 0.5
-const THICK = 1.5
+const OUTER_WIDTH = 2.5
+const BLOCK_WIDTH = 2
+const CELL_WIDTH = 0.75
+const CELL_COLOR = '#555'
+/** Offset verticale per centrare le cifre Roboto (cap height ~0.711 em). */
+const BASELINE_SHIFT = 0.355
 
 interface SudokuGridProps {
-  grid: Grid
-  cellSize: number
+  /** Cifre da stampare. */
+  values: Grid
+  /** Cifre date: in Bold. Le altre (soluzione) in Regular. */
+  givens: Grid
+  size: number
+  digitSize: number
 }
 
-export function SudokuGrid({ grid, cellSize }: SudokuGridProps) {
-  const styles = StyleSheet.create({
-    grid: {
-      borderTopWidth: THICK,
-      borderLeftWidth: THICK,
-      borderColor: '#000',
-    },
-    row: { flexDirection: 'row' },
-    cell: {
-      width: cellSize,
-      height: cellSize,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderColor: '#000',
-    },
-    text: { fontSize: cellSize * 0.55 },
-  })
+export function SudokuGrid({ values, givens, size, digitSize }: SudokuGridProps) {
+  const pad = OUTER_WIDTH / 2
+  const inner = size - OUTER_WIDTH
+  const cell = inner / 9
+  const at = (i: number) => pad + i * cell
 
   return (
-    <View style={styles.grid}>
-      {Array.from({ length: 9 }, (_, r) => (
-        <View key={r} style={styles.row}>
-          {Array.from({ length: 9 }, (_, c) => {
-            const value = grid[r * 9 + c]
-            return (
-              <View
-                key={c}
-                style={[
-                  styles.cell,
-                  {
-                    borderRightWidth: c % 3 === 2 ? THICK : THIN,
-                    borderBottomWidth: r % 3 === 2 ? THICK : THIN,
-                  },
-                ]}
-              >
-                {value !== 0 && <Text style={styles.text}>{value}</Text>}
-              </View>
-            )
-          })}
-        </View>
+    <Svg width={size} height={size}>
+      {[1, 2, 4, 5, 7, 8].map((i) => (
+        <Line key={`h${i}`} x1={at(0)} y1={at(i)} x2={at(9)} y2={at(i)} stroke={CELL_COLOR} strokeWidth={CELL_WIDTH} />
       ))}
-    </View>
+      {[1, 2, 4, 5, 7, 8].map((i) => (
+        <Line key={`v${i}`} x1={at(i)} y1={at(0)} x2={at(i)} y2={at(9)} stroke={CELL_COLOR} strokeWidth={CELL_WIDTH} />
+      ))}
+      {[3, 6].map((i) => (
+        <Line key={`bh${i}`} x1={at(0)} y1={at(i)} x2={at(9)} y2={at(i)} stroke="#000" strokeWidth={BLOCK_WIDTH} />
+      ))}
+      {[3, 6].map((i) => (
+        <Line key={`bv${i}`} x1={at(i)} y1={at(0)} x2={at(i)} y2={at(9)} stroke="#000" strokeWidth={BLOCK_WIDTH} />
+      ))}
+      <Rect x={pad} y={pad} width={inner} height={inner} fill="none" stroke="#000" strokeWidth={OUTER_WIDTH} />
+      {values.map((value, i) =>
+        value === 0 ? null : (
+          <Text
+            key={i}
+            x={at(i % 9) + cell / 2}
+            y={at(Math.floor(i / 9)) + cell / 2 + digitSize * BASELINE_SHIFT}
+            textAnchor="middle"
+            fill="#000"
+            style={{ fontFamily: givens[i] !== 0 ? FONT_BOLD : FONT_REGULAR, fontSize: digitSize }}
+          >
+            {String(value)}
+          </Text>
+        ),
+      )}
+    </Svg>
   )
 }

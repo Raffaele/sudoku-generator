@@ -28,3 +28,29 @@
   width: 100%;
   border: 1px solid #ccc;
 }
+
+.controls {
+  flex-wrap: wrap;
+}
+
+.controls .check {
+  flex-direction: row;
+  align-items: center;
+}
+
+.summary {
+  margin: 0;
+  font-size: 14px;
+}
+
+.warning {
+  margin: 0;
+  color: #b45309;
+  font-size: 14px;
+}
+
+.error {
+  margin: 0;
+  text-align: left;
+  white-space: pre-wrap;
+}

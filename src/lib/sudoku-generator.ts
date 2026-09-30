@@ -159,12 +159,12 @@ function solve(grid: Grid, limit: number, rng?: () => number, out?: Grid): numbe
   return count;
 }
 
-function countSolutions(grid: Grid, limit = 2): number {
+export function countSolutions(grid: Grid, limit = 2): number {
   return solve(grid, limit);
 }
 
 /** true se il puzzle si risolve con sole tecniche base (naked + hidden singles). */
-function solvableWithSingles(grid: Grid): boolean {
+export function solvableWithSingles(grid: Grid): boolean {
   const g = grid.slice();
   const cand = (i: number): number => {
     let used = 0;

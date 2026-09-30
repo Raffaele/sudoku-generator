@@ -20,18 +20,20 @@ La copertina e l'introduzione (pagina del titolo, copyright, regole) **non** fan
 
 ## Stack
 
-- Node.js ≥ 22, TypeScript in modalità `strict`
+- **App Vite + React + TypeScript** (`strict`), gestore di pacchetti **yarn**. Il PDF si genera nel browser: `yarn dev` per avviare, `yarn build` per compilare.
 - `@react-pdf/renderer` (React). Le griglie vanno disegnate con `<Svg>` (`Line`, `Rect`, `Text`), **non** con `<View>` e bordi: il risultato è più nitido in stampa e il rendering è più veloce.
-- Esecuzione con `tsx`
-- Il generatore di sudoku **esiste già**: `src/sudoku-generator.ts` (fornito dall'utente). Non riscriverlo. Usa la sua API:
-  - tipi `Cell`, `FilledCell`, `EmptyCell`, `Grid = Cell[]` (81 celle riga per riga, `0` = vuota)
+- L'interfaccia (`src/App.tsx`) permette di modificare i parametri di `BookConfig`, mostra l'anteprima (`PDFViewer`) e scarica il PDF (`PDFDownloadLink`).
+- Nei file `.ts`/`.tsx` gli import locali hanno l'estensione (`./config.ts`), come nel template Vite.
+- Il generatore di sudoku **esiste già**: `src/lib/sudoku-generator.ts` (fornito dall'utente, già ripulito dal codice non necessario). Non riscriverlo. API esportata:
+  - tipi `Cell`, `FilledCell`, `EmptyCell`, `Grid = Cell[]` (81 celle riga per riga, `0` = vuota), `Sudoku`, `GenerateOptions`
   - `generateSudoku(clues, { seed, singlesOnly, maxAttempts })` → `{ puzzle, solution, clues }`
-  - `countSolutions(grid, limit)`, `solvableWithSingles(grid)`, `assertGrid(grid)`
+  - `countSolutions(grid, limit)`, `solvableWithSingles(grid)`
+  - `assertGrid` è interna al modulo
   - `generateBook` genera tutti i puzzle con lo stesso numero di celle occupate. Per la progressione di difficoltà, chiama invece `generateSudoku` per ogni puzzle con il suo numero di celle occupate e un seed derivato (vedi sotto), scartando i duplicati.
 
 ## Parametri (`src/config.ts`)
 
-Esporta un oggetto `BookConfig` tipizzato con i default qui sotto. `startPageNumber` deve essere sovrascrivibile anche da CLI (`--start-page=7`); gli altri parametri possono esserlo facoltativamente.
+Esporta l'interfaccia `BookConfig`, `DEFAULT_CONFIG` con i default qui sotto e `validateConfig`. Tutti i parametri sono modificabili dall'interfaccia prima di generare il PDF.
 
 | Parametro                  | Default                                               | Descrizione                                                                                      |
 | -------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -44,13 +46,11 @@ Esporta un oggetto `BookConfig` tipizzato con i default qui sotto. `startPageNum
 | `seed`                     | `2026`                                                | Seed principale. Seed del puzzle _i_ = derivato in modo deterministico da `seed` e `i`           |
 | `showDateTime`             | `true`                                                | Riga "Date: **\_\_** Time: **\_\_**" sotto ogni puzzle                                           |
 | `solutionsDivider`         | `true`                                                | Pagina "Solutions" prima delle soluzioni                                                         |
-| `fontRegular` / `fontBold` | `assets/fonts/Roboto-Regular.ttf` / `Roboto-Bold.ttf` | Percorsi dei font                                                                                |
-| `output`                   | `output/interior.pdf`                                 | File di output                                                                                   |
 
 ## Font (requisito KDP: font incorporati)
 
-- **Usa Roboto** (Regular e Bold). Metti i file TTF in `assets/fonts/` e aggiungi il file di licenza nella stessa cartella. Controlla la licenza al momento del download: deve permettere l'uso commerciale e l'incorporamento.
-- Registra i font con `Font.register({ family: 'Roboto', fonts: [...] })`.
+- **Usa Roboto** (Regular e Bold). Metti i file TTF in `public/fonts/` (`Roboto-Regular.ttf`, `Roboto-Bold.ttf`) e aggiungi il file di licenza nella stessa cartella. Controlla la licenza al momento del download: deve permettere l'uso commerciale e l'incorporamento.
+- I font sono registrati in `src/fonts.ts` come due famiglie, `Roboto` (Regular) e `Roboto-Bold` (Bold), così vale anche dentro `<Svg>`. Usa sempre le costanti `FONT_REGULAR` e `FONT_BOLD`.
 - **Vietato** usare i font integrati di react-pdf (Helvetica, Times, Courier): sono font PDF standard che **non vengono incorporati** e KDP li segnala. Il libro precedente aveva proprio questo problema.
 - Disattiva la sillabazione: `Font.registerHyphenationCallback(w => [w])`.
 - Uso: cifre date dei puzzle in **Bold**; titoli in Bold; testo e numeri di pagina in Regular. Nelle soluzioni, cifre date in **Bold** e cifre risolte in **Regular**, così si distinguono.
@@ -103,8 +103,8 @@ Le griglie devono essere quadrate e centrate nella loro cella di layout.
 
 **Leggibilità (verifiche obbligatorie):**
 
-- Cifre dei puzzle: circa il 55% del lato della cella. Soglia minima **22 pt**, obiettivo circa 28 pt con 2 per pagina. Sotto i 22 pt stampa un avviso: si perde il posizionamento "large print".
-- Cifre delle soluzioni: almeno **11 pt**. Sotto questa soglia, interrompi con un errore.
+- Cifre dei puzzle: 55% del lato della cella. Soglia minima **22 pt**: sotto questa soglia l'interfaccia mostra un avviso (si perde il posizionamento "large print"). Nota: con i margini KDP e 2 puzzle per pagina la griglia misura circa 282 pt (cifre circa 17 pt), quindi l'avviso compare con i default; per cifre da 22 pt serve 1 puzzle per pagina.
+- Cifre delle soluzioni: 65% del lato della cella (le celle sono piccole). Minimo **11 pt**: sotto questa soglia il calcolo del layout lancia un errore.
 
 **Linee della griglia:**
 
@@ -124,31 +124,35 @@ Non aggiungere pagine vuote.
 ## Struttura del progetto
 
 ```
-assets/fonts/          Roboto-Regular.ttf, Roboto-Bold.ttf, licenza
+public/fonts/          Roboto-Regular.ttf, Roboto-Bold.ttf, licenza
 src/
-  sudoku-generator.ts  esistente, non modificare
-  config.ts            BookConfig + default + lettura CLI
-  puzzles.ts           generazione con progressione e dedup
-  layout.ts            margini KDP, parità, calcolo cols×rows, dimensioni font
+  lib/sudoku-generator.ts  esistente, non modificare
+  config.ts            BookConfig, DEFAULT_CONFIG, validateConfig
+  puzzles.ts           generazione con progressione e dedup, verifyBook (controlli sul contenuto)
+  layout.ts            margini KDP, parità, calcolo cols×rows, dimensioni font, avvisi
+  fonts.ts             registrazione dei font Roboto
   components/
     SudokuGrid.tsx     griglia Svg (puzzle o soluzione)
+    GridPage.tsx       pagina con margini specchiati e blocco di griglie
     PuzzlePage.tsx
     SolutionPage.tsx
     DividerPage.tsx
     PageNumber.tsx
-  build.tsx            entry point: genera e scrive il PDF
-  verify.ts            controlli sul PDF prodotto
-output/
+    BookDocument.tsx   Document con tutte le pagine
+  App.tsx              interfaccia: parametri, anteprima, download
 ```
 
-Script `package.json`:
+Comandi:
 
-- `npm run build`: genera `output/interior.pdf` e stampa un riepilogo (pagine totali, margine interno usato, dimensioni delle celle e dei font, eventuali avvisi)
-- `npm run verify`: esegue i controlli qui sotto
+- `yarn dev`: avvia l'app
+- `yarn build`: controllo dei tipi e build di produzione
+- `yarn lint`
 
-## Verifiche obbligatorie (`verify.ts`, più controlli in build)
+Alla pressione di "Genera" l'app valida i parametri, calcola il layout (numero di pagine, margine interno, dimensioni), genera i puzzle, esegue `verifyBook` e mostra un riepilogo con gli eventuali avvisi.
 
-**Contenuto**, prima del rendering:
+## Verifiche
+
+**Contenuto**, prima del rendering (`verifyBook`, già implementate):
 
 - ogni puzzle ha **soluzione unica** (`countSolutions(p, 2) === 1`)
 - ogni puzzle è risolvibile con le sole tecniche base (se `singlesOnly`)
@@ -156,11 +160,11 @@ Script `package.json`:
 - nessun puzzle duplicato
 - il numero di celle occupate segue la progressione configurata
 
-**PDF**, dopo il rendering:
+**PDF**, dopo il rendering (non ancora automatizzate, da fare a mano sul file scaricato):
 
 - dimensione di tutte le pagine = 612 × 792 pt
-- **tutti i font incorporati** (verificabile con `pdffonts`: colonna `emb` = `yes` per ogni font)
-- nessun contenuto entro 0,25" dai bordi, e margine interno ≥ minimo KDP sul lato corretto per ogni pagina (controllabile estraendo i bounding box, ad esempio con `pdfjs-dist`)
+- **tutti i font incorporati** (`pdffonts`: colonna `emb` = `yes` per ogni font)
+- nessun contenuto entro 0,25" dai bordi, e margine interno ≥ minimo KDP sul lato corretto per ogni pagina
 - numero di pagina presente e corretto su ogni pagina
 
 ## Cose da NON fare
@@ -169,4 +173,4 @@ Script `package.json`:
 - Non generare puzzle senza verificarne l'unicità.
 - Non stampare testo in italiano: il libro è per il mercato US.
 - Non aggiungere elementi decorativi, citazioni o immagini senza richiesta.
-- Non modificare `sudoku-generator.ts`. Se serve qualcosa in più, crea un modulo separato che lo usa.
+- Non modificare `src/lib/sudoku-generator.ts` senza chiedere. Se serve qualcosa in più, crea un modulo separato che lo usa.
