@@ -15,12 +15,14 @@ interface GridPageProps<T> {
   pageNumber: number
   innerMargin: number
   layout: GridLayout
-  renderItem: (item: T) => ReactNode
+  /** `odd`: pagina destra (margine interno a sinistra). */
+  renderItem: (item: T, context: { odd: boolean }) => ReactNode
 }
 
 /** Pagina KDP con margini specchiati, un blocco di griglie disposte come da `layout` e il numero di pagina. */
 export function GridPage<T>({ items, pageNumber, innerMargin, layout, renderItem }: GridPageProps<T>) {
   const margins = pageMargins(pageNumber, innerMargin)
+  const odd = pageNumber % 2 === 1
   return (
     <Page
       size="LETTER"
@@ -41,12 +43,12 @@ export function GridPage<T>({ items, pageNumber, innerMargin, layout, renderItem
               flexDirection: 'row',
               justifyContent: 'center',
               columnGap: layout.gap,
-              marginTop: r === 0 ? 0 : layout.gap,
+              marginTop: r === 0 ? 0 : layout.rowGap,
             }}
           >
             {row.map((item, c) => (
-              <View key={c} style={{ width: layout.side, alignItems: 'center' }}>
-                {renderItem(item)}
+              <View key={c} style={{ width: layout.slotWidth, alignItems: 'center' }}>
+                {renderItem(item, { odd })}
               </View>
             ))}
           </View>

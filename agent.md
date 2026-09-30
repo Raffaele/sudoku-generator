@@ -10,7 +10,7 @@ La copertina e l'introduzione (pagina del titolo, copyright, regole) **non** fan
 ## Contesto di prodotto (decisioni già prese, non cambiarle senza chiedere)
 
 - **Mercato:** Amazon US. **Target:** senior e principianti. **Nicchia:** "Extra Large Print Easy Sudoku".
-- **Lingua del testo stampato:** inglese (`Puzzle 12`, `Solution 12`, `Solutions`, `Date`, `Time`).
+- **Lingua del testo stampato:** inglese (`Sudoku 12`, `Solution 12`, `Solutions`, `Date`, `Time`).
 - **Formato:** 8,5" × 11" (612 × 792 pt), **senza bleed**, carta bianca, paperback.
 - **Quantità:** 306 puzzle, così "300+" è onesto e l'ultima pagina di soluzioni è piena (306 / 9 = 34).
 - **Default di impaginazione:** 2 puzzle per pagina, 9 soluzioni per pagina.
@@ -44,16 +44,17 @@ Esporta l'interfaccia `BookConfig`, `DEFAULT_CONFIG` con i default qui sotto e `
 | `cluesStart` / `cluesEnd`  | `45` / `36`                                           | Celle occupate nel primo e nell'ultimo puzzle, con interpolazione lineare arrotondata            |
 | `singlesOnly`              | `true`                                                | Solo tecniche base                                                                               |
 | `seed`                     | `2026`                                                | Seed principale. Seed del puzzle _i_ = derivato in modo deterministico da `seed` e `i`           |
-| `showDateTime`             | `true`                                                | Riga "Date: **\_\_** Time: **\_\_**" sotto ogni puzzle                                           |
+| `showDateTime`             | `true`                                                | Righe "Date" e "Time" per ogni puzzle                                                            |
 | `solutionsDivider`         | `true`                                                | Pagina "Solutions" prima delle soluzioni                                                         |
 
 ## Font (requisito KDP: font incorporati)
 
 - **Usa Roboto** (Regular e Bold). Metti i file TTF in `public/fonts/` (`Roboto-Regular.ttf`, `Roboto-Bold.ttf`) e aggiungi il file di licenza nella stessa cartella. Controlla la licenza al momento del download: deve permettere l'uso commerciale e l'incorporamento.
-- I font sono registrati in `src/fonts.ts` come due famiglie, `Roboto` (Regular) e `Roboto-Bold` (Bold), così vale anche dentro `<Svg>`. Usa sempre le costanti `FONT_REGULAR` e `FONT_BOLD`.
+- I font sono registrati in `src/fonts.ts` come famiglie separate, `Roboto` (Regular), `Roboto-Bold` (Bold) e `PatrickHand`, così vale anche dentro `<Svg>`. Usa sempre le costanti `FONT_REGULAR`, `FONT_BOLD` e `FONT_HANDWRITTEN`.
 - **Vietato** usare i font integrati di react-pdf (Helvetica, Times, Courier): sono font PDF standard che **non vengono incorporati** e KDP li segnala. Il libro precedente aveva proprio questo problema.
 - Disattiva la sillabazione: `Font.registerHyphenationCallback(w => [w])`.
-- Uso: cifre date dei puzzle in **Bold**; titoli in Bold; testo e numeri di pagina in Regular. Nelle soluzioni, cifre date in **Bold** e cifre risolte in **Regular**, così si distinguono.
+- Uso: cifre date dei puzzle in **Bold**; titoli in Bold; testo e numeri di pagina in Regular. Nelle soluzioni, cifre date in Roboto **Bold** e cifre risolte in **Patrick Hand** (aspetto scritto a mano), così si distinguono a colpo d'occhio.
+- **Patrick Hand** (Regular, licenza OFL) sta in `public/fonts/` con `PatrickHand-OFL.txt`. Si usa solo per le cifre risolte nelle soluzioni, mai nei puzzle. A parità di punti le sue cifre sembrano più piccole: in `SudokuGrid.tsx` la dimensione è moltiplicata per 1,1.
 
 ## Margini KDP (senza bleed)
 
@@ -95,15 +96,17 @@ Se `startPageNumber` è pari, stampa un avviso: di norma un contenuto inizia su 
 
 Per un numero N di griglie per pagina, scegli la disposizione `cols × rows` (con `cols × rows ≥ N`) che **massimizza la dimensione della griglia** nell'area disponibile, tenendo conto di:
 
-- titolo sopra ogni griglia (`Puzzle 12`, Bold)
-- riga data e tempo sotto ogni puzzle (se `showDateTime`)
 - spazi fra le griglie (almeno 0,3")
+- due disposizioni per i puzzle, scelte automaticamente (vince quella con la griglia più grande, a parità quella con il titolo sopra):
+  - **titolo sopra** la griglia (`Sudoku 12`, Bold) e riga Date/Time sotto. Usata con 1 puzzle per pagina e con 4 o più.
+  - **titolo a lato**: pannello accanto alla griglia con titolo e Date/Time (se `showDateTime`), senza linee su cui scrivere; il resto del pannello resta bianco. Usata con 2 puzzle per pagina, dove l'altezza è il vincolo e la larghezza avanza. Il pannello sta **sempre dal lato del margine interno** (pagine dispari: a sinistra; pagine pari: a destra), così la griglia resta dal lato esterno, più comodo per scrivere. Larghezza minima del pannello 130 pt; il pannello occupa tutta la larghezza che resta.
+- le soluzioni usano sempre il titolo sopra
 
-Le griglie devono essere quadrate e centrate nella loro cella di layout.
+Le griglie devono essere quadrate. Con il titolo sopra sono centrate nello slot.
 
 **Leggibilità (verifiche obbligatorie):**
 
-- Cifre dei puzzle: 55% del lato della cella. Soglia minima **22 pt**: sotto questa soglia l'interfaccia mostra un avviso (si perde il posizionamento "large print"). Nota: con i margini KDP e 2 puzzle per pagina la griglia misura circa 282 pt (cifre circa 17 pt), quindi l'avviso compare con i default; per cifre da 22 pt serve 1 puzzle per pagina.
+- Cifre dei puzzle: 60% del lato della cella massima possibile. Con il pannello a lato la cella viene poi rimpicciolita fino a un rapporto cifra/cella di **0,66** (`PUZZLE_SIDE_CELL_RATIO` in `layout.ts`) senza cambiare la dimensione delle cifre, e lo spazio avanzato si divide in parti uguali sopra, tra e sotto i puzzle. Soglia minima **22 pt**: sotto questa soglia l'interfaccia mostra un avviso (si perde il posizionamento "large print"). Con i default (2 per pagina, titolo a lato) le cifre sono circa 22,4 pt, la cella circa 34 pt e la griglia circa 309 pt. Con 4 puzzle per pagina le cifre scendono a circa 17 pt e l'avviso compare.
 - Cifre delle soluzioni: 65% del lato della cella (le celle sono piccole). Minimo **11 pt**: sotto questa soglia il calcolo del layout lancia un errore.
 
 **Linee della griglia:**
@@ -115,7 +118,7 @@ Le griglie devono essere quadrate e centrate nella loro cella di layout.
 
 ## Struttura del PDF
 
-1. Pagine dei puzzle, in ordine numerico (`Puzzle 1` … `Puzzle 306`)
+1. Pagine dei puzzle, in ordine numerico (`Sudoku 1` … `Sudoku 306`)
 2. Pagina divisoria "Solutions" (se `solutionsDivider`)
 3. Pagine delle soluzioni, in ordine numerico (`Solution 1` …)
 
@@ -124,7 +127,7 @@ Non aggiungere pagine vuote.
 ## Struttura del progetto
 
 ```
-public/fonts/          Roboto-Regular.ttf, Roboto-Bold.ttf, licenza
+public/fonts/          Roboto-Regular.ttf, Roboto-Bold.ttf, PatrickHand-Regular.ttf, licenze
 src/
   lib/sudoku-generator.ts  esistente, non modificare
   config.ts            BookConfig, DEFAULT_CONFIG, validateConfig
@@ -135,6 +138,7 @@ src/
     SudokuGrid.tsx     griglia Svg (puzzle o soluzione)
     GridPage.tsx       pagina con margini specchiati e blocco di griglie
     PuzzlePage.tsx
+    PuzzlePanel.tsx    titolo e Date/Time accanto alla griglia
     SolutionPage.tsx
     DividerPage.tsx
     PageNumber.tsx

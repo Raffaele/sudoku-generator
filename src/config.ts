@@ -13,7 +13,7 @@ export interface BookConfig {
   /** Solo naked/hidden singles. */
   singlesOnly: boolean
   seed: number
-  /** Riga "Date: ___ Time: ___" sotto ogni puzzle. */
+  /** Righe "Date" e "Time" per ogni puzzle. */
   showDateTime: boolean
   /** Pagina "Solutions" prima delle soluzioni. */
   solutionsDivider: boolean

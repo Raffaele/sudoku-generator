@@ -1,17 +1,17 @@
-import { useState } from 'react'
-import { PDFDownloadLink, PDFViewer } from '@react-pdf/renderer'
-import { BookDocument } from './components/BookDocument.tsx'
+import { useEffect, useState } from 'react'
 import { DEFAULT_CONFIG, validateConfig, type BookConfig } from './config.ts'
-import './fonts.ts'
 import { computeBookLayout, type BookLayout } from './layout.ts'
 import type { Sudoku } from './lib/sudoku-generator.ts'
 import { generatePuzzles, verifyBook } from './puzzles.ts'
+import { renderPdf } from './renderPdf.ts'
 import './App.css'
 
 interface Result {
   book: Sudoku[]
   config: BookConfig
   layout: BookLayout
+  /** URL del PDF già renderizzato (blob). */
+  url: string
 }
 
 type NumericKey = {
@@ -48,14 +48,15 @@ function App() {
     setBusy(true)
     setError(null)
     // Rimanda la generazione (sincrona e pesante) per far comparire lo stato "in corso".
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
         const errors = validateConfig(config)
         if (errors.length > 0) throw new Error(errors.join('\n'))
         const layout = computeBookLayout(config)
         const book = generatePuzzles(config)
         verifyBook(book, config)
-        setResult({ book, config, layout })
+        const blob = await renderPdf({ book, config, layout })
+        setResult({ book, config, layout, url: URL.createObjectURL(blob) })
       } catch (e) {
         setResult(null)
         setError(e instanceof Error ? e.message : String(e))
@@ -64,6 +65,10 @@ function App() {
       }
     }, 0)
   }
+
+  // Libera il blob precedente quando viene sostituito o al termine.
+  const url = result?.url
+  useEffect(() => () => (url ? URL.revokeObjectURL(url) : undefined), [url])
 
   const { layout } = result ?? {}
 
@@ -95,12 +100,9 @@ function App() {
           {busy ? 'Generazione…' : 'Genera'}
         </button>
         {result && (
-          <PDFDownloadLink
-            document={<BookDocument {...result} />}
-            fileName={`interior-seed${result.config.seed}.pdf`}
-          >
+          <a href={result.url} download={`interior-seed${result.config.seed}.pdf`}>
             Scarica PDF
-          </PDFDownloadLink>
+          </a>
         )}
       </div>
       {error && <pre className="error">{error}</pre>}
@@ -109,7 +111,7 @@ function App() {
           <p className="summary">
             {layout.bookPages} pagine totali ({layout.pdfPages} in questo PDF) · margine interno{' '}
             {(layout.innerMargin / 72).toFixed(3)}&quot; · puzzle {layout.puzzleGrid.cols}×
-            {layout.puzzleGrid.rows}, cifre {layout.puzzleGrid.digitSize.toFixed(1)} pt · soluzioni{' '}
+            {layout.puzzleGrid.rows} (titolo {layout.puzzleGrid.arrangement === 'side' ? 'a lato' : 'sopra'}), cifre {layout.puzzleGrid.digitSize.toFixed(1)} pt · soluzioni{' '}
             {layout.solutionGrid.cols}×{layout.solutionGrid.rows}, cifre{' '}
             {layout.solutionGrid.digitSize.toFixed(1)} pt
           </p>
@@ -118,9 +120,7 @@ function App() {
               ⚠ {w}
             </p>
           ))}
-          <PDFViewer className="viewer">
-            <BookDocument {...result} />
-          </PDFViewer>
+          <iframe className="viewer" src={result.url} title="Anteprima PDF" />
         </>
       )}
     </main>
