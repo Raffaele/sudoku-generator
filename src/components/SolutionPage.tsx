@@ -1,9 +1,12 @@
 import { Text, View } from '@react-pdf/renderer'
-import { FONT_BOLD } from '../fonts.ts'
+import { FONT_BOLD, FONT_REGULAR } from '../fonts.ts'
 import type { GridLayout } from '../layout.ts'
 import { GridPage } from './GridPage.tsx'
 import type { NumberedSudoku } from './PuzzlePage.tsx'
 import { SudokuGrid } from './SudokuGrid.tsx'
+
+/** Le cifre della traccia sono grigio scuro, così si distinguono da quelle risolte (nere, a mano). */
+const GIVEN_COLOR = '#555'
 
 interface SolutionPageProps {
   solutions: NumberedSudoku[]
@@ -29,6 +32,9 @@ export function SolutionPage({ solutions, pageNumber, innerMargin, layout }: Sol
             givens={sudoku.puzzle}
             size={layout.side}
             digitSize={layout.digitSize}
+            solvedDigitSize={layout.solvedDigitSize}
+            givenFont={FONT_REGULAR}
+            givenColor={GIVEN_COLOR}
           />
         </>
       )}

@@ -12,8 +12,31 @@ const GRID_GAP = 0.3 * INCH
 /** Tolleranza sull'altezza: evita che arrotondamenti facciano traboccare il contenuto su una pagina in più. */
 const HEIGHT_SLACK = 2
 
-/** Spessore del bordo esterno della griglia (condiviso con SudokuGrid). */
-export const OUTER_LINE_WIDTH = 2.5
+/**
+ * Spessori delle linee della griglia, in punti. Fino a una griglia di 300 pt sono quelli pieni;
+ * sotto scalano in proporzione al lato (con un minimo, per restare visibili in stampa).
+ */
+const LINE_REFERENCE_SIDE = 300
+const LINES_FULL = { outer: 2.5, block: 2, cell: 0.75 }
+const LINES_MIN = { outer: 1.25, block: 1, cell: 0.5 }
+
+export interface LineWidths {
+  /** Bordo esterno. */
+  outer: number
+  /** Divisori dei blocchi 3×3. */
+  block: number
+  /** Linee tra le celle. */
+  cell: number
+}
+
+export function lineWidths(side: number): LineWidths {
+  const scale = Math.min(1, side / LINE_REFERENCE_SIDE)
+  return {
+    outer: Math.max(LINES_MIN.outer, LINES_FULL.outer * scale),
+    block: Math.max(LINES_MIN.block, LINES_FULL.block * scale),
+    cell: Math.max(LINES_MIN.cell, LINES_FULL.cell * scale),
+  }
+}
 
 // Titolo sopra la griglia (usato dalle soluzioni e, se conviene, dai puzzle).
 const PUZZLE_TITLE_HEIGHT = 30
@@ -35,7 +58,9 @@ const PUZZLE_DIGIT_RATIO = 0.6
  * diventa aria sopra, tra e sotto i puzzle.
  */
 const PUZZLE_SIDE_CELL_RATIO = 0.66
-const SOLUTION_DIGIT_RATIO = 0.65
+/** Nelle soluzioni le cifre della traccia (date) sono più piccole di quelle risolte (a mano). */
+const SOLUTION_DIGIT_RATIO = 0.72
+const SOLUTION_SOLVED_DIGIT_RATIO = 0.85
 const PUZZLE_DIGIT_MIN = 22
 const SOLUTION_DIGIT_MIN = 11
 
@@ -71,6 +96,8 @@ export interface GridLayout {
   panelGap: number
   cellSize: number
   digitSize: number
+  /** Dimensione delle cifre risolte nelle soluzioni (uguale a `digitSize` altrove). */
+  solvedDigitSize: number
   /** Spazio tra colonne. */
   gap: number
   /** Spazio tra righe di slot. */
@@ -123,6 +150,8 @@ interface GridOptions {
   titleHeight: number
   footerHeight: number
   digitRatio: number
+  /** Rapporto cifra/cella delle cifre risolte (default: `digitRatio`). */
+  solvedDigitRatio?: number
   /** Se impostato, con il pannello a lato la cella si rimpicciolisce fino a questo rapporto cifra/cella. */
   sideCellRatio?: number
   /** Se true prova anche la disposizione con il pannello a lato della griglia. */
@@ -149,10 +178,11 @@ function computeGridLayout(o: GridOptions): GridLayout {
     if (maxSide <= 0 || maxSide <= bestMaxSide + 1e-6) return
 
     // Le cifre sono sempre quelle della cella massima; la cella può poi rimpicciolirsi.
-    const digitSize = ((maxSide - OUTER_LINE_WIDTH) / 9) * digitRatio
+    const maxOuter = lineWidths(maxSide).outer
+    const digitSize = ((maxSide - maxOuter) / 9) * digitRatio
     const shrink = !above && o.sideCellRatio !== undefined
-    const cellSize = shrink ? digitSize / o.sideCellRatio! : (maxSide - OUTER_LINE_WIDTH) / 9
-    const side = shrink ? cellSize * 9 + OUTER_LINE_WIDTH : maxSide
+    const cellSize = shrink ? digitSize / o.sideCellRatio! : (maxSide - maxOuter) / 9
+    const side = shrink ? cellSize * 9 + maxOuter : maxSide
     const slotWidth = above ? side : slotMax
 
     // Con la cella rimpicciolita lo spazio avanzato si divide in parti uguali sopra, tra e sotto.
@@ -170,6 +200,7 @@ function computeGridLayout(o: GridOptions): GridLayout {
       panelGap: PANEL_GAP,
       cellSize,
       digitSize,
+      solvedDigitSize: ((maxSide - maxOuter) / 9) * (o.solvedDigitRatio ?? digitRatio),
       gap: GRID_GAP,
       rowGap,
       titleHeight,
@@ -214,6 +245,7 @@ export function computeBookLayout(config: BookConfig): BookLayout {
     titleHeight: SOLUTION_TITLE_HEIGHT,
     footerHeight: 0,
     digitRatio: SOLUTION_DIGIT_RATIO,
+    solvedDigitRatio: SOLUTION_SOLVED_DIGIT_RATIO,
     allowSidePanel: false,
   })
 

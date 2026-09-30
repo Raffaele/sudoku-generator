@@ -1,26 +1,43 @@
 import { Line, Rect, Svg, Text } from '@react-pdf/renderer'
 import { FONT_BOLD, FONT_HANDWRITTEN } from '../fonts.ts'
-import { OUTER_LINE_WIDTH as OUTER_WIDTH } from '../layout.ts'
+import { lineWidths } from '../layout.ts'
 import type { Grid } from '../lib/sudoku-generator.ts'
 
-const BLOCK_WIDTH = 2
-const CELL_WIDTH = 0.75
 const CELL_COLOR = '#555'
 /** Offset verticale per centrare le cifre Roboto (cap height ~0.711 em). */
 const BASELINE_SHIFT = 0.355
-/** Patrick Hand ha cifre visivamente più piccole di Roboto a parità di punti. */
-const HANDWRITTEN_SCALE = 1.1
+/**
+ * Patrick Hand ha un tratto sottile e a schermo appare grigio. react-pdf ignora `stroke` sul testo SVG,
+ * quindi le cifre a mano si disegnano due volte con questo scarto (in punti), che ne ispessisce il tratto.
+ */
+const HANDWRITTEN_EMBOLDEN = 0.3
 
 interface SudokuGridProps {
   /** Cifre da stampare. */
   values: Grid
-  /** Cifre date: Roboto Bold. Le altre (soluzione): Patrick Hand, scritto a mano. */
+  /** Cifre date (traccia). Le altre (soluzione): Patrick Hand, scritto a mano. */
   givens: Grid
   size: number
+  /** Dimensione delle cifre date. */
   digitSize: number
+  /** Dimensione delle cifre risolte (default: come `digitSize`). */
+  solvedDigitSize?: number
+  /** Font delle cifre date (default: Roboto Bold). */
+  givenFont?: string
+  /** Colore delle cifre date. Le cifre risolte sono sempre nere. */
+  givenColor?: string
 }
 
-export function SudokuGrid({ values, givens, size, digitSize }: SudokuGridProps) {
+export function SudokuGrid({
+  values,
+  givens,
+  size,
+  digitSize,
+  solvedDigitSize = digitSize,
+  givenFont = FONT_BOLD,
+  givenColor = '#000',
+}: SudokuGridProps) {
+  const { outer: OUTER_WIDTH, block: BLOCK_WIDTH, cell: CELL_WIDTH } = lineWidths(size)
   const pad = OUTER_WIDTH / 2
   const inner = size - OUTER_WIDTH
   const cell = inner / 9
@@ -44,19 +61,17 @@ export function SudokuGrid({ values, givens, size, digitSize }: SudokuGridProps)
       {values.map((value, i) => {
         if (value === 0) return null
         const given = givens[i] !== 0
-        const size = given ? digitSize : digitSize * HANDWRITTEN_SCALE
-        return (
-          <Text
-            key={i}
-            x={at(i % 9) + cell / 2}
-            y={at(Math.floor(i / 9)) + cell / 2 + size * BASELINE_SHIFT}
-            textAnchor="middle"
-            fill="#000"
-            style={{ fontFamily: given ? FONT_BOLD : FONT_HANDWRITTEN, fontSize: size }}
-          >
+        const x = at(i % 9) + cell / 2
+        const fontSize = given ? digitSize : solvedDigitSize
+        const y = at(Math.floor(i / 9)) + cell / 2 + fontSize * BASELINE_SHIFT
+        const digit = (key: string, dx: number, dy: number, color: string, fontFamily: string) => (
+          <Text key={key} x={x + dx} y={y + dy} textAnchor="middle" fill={color} style={{ fontFamily, fontSize }}>
             {String(value)}
           </Text>
         )
+        if (given) return digit(`${i}`, 0, 0, givenColor, givenFont)
+        const d = HANDWRITTEN_EMBOLDEN / 2
+        return [digit(`${i}a`, -d, -d, '#000', FONT_HANDWRITTEN), digit(`${i}b`, d, d, '#000', FONT_HANDWRITTEN)]
       })}
     </Svg>
   )

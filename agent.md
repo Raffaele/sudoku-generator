@@ -53,8 +53,8 @@ Esporta l'interfaccia `BookConfig`, `DEFAULT_CONFIG` con i default qui sotto e `
 - I font sono registrati in `src/fonts.ts` come famiglie separate, `Roboto` (Regular), `Roboto-Bold` (Bold) e `PatrickHand`, così vale anche dentro `<Svg>`. Usa sempre le costanti `FONT_REGULAR`, `FONT_BOLD` e `FONT_HANDWRITTEN`.
 - **Vietato** usare i font integrati di react-pdf (Helvetica, Times, Courier): sono font PDF standard che **non vengono incorporati** e KDP li segnala. Il libro precedente aveva proprio questo problema.
 - Disattiva la sillabazione: `Font.registerHyphenationCallback(w => [w])`.
-- Uso: cifre date dei puzzle in **Bold**; titoli in Bold; testo e numeri di pagina in Regular. Nelle soluzioni, cifre date in Roboto **Bold** e cifre risolte in **Patrick Hand** (aspetto scritto a mano), così si distinguono a colpo d'occhio.
-- **Patrick Hand** (Regular, licenza OFL) sta in `public/fonts/` con `PatrickHand-OFL.txt`. Si usa solo per le cifre risolte nelle soluzioni, mai nei puzzle. A parità di punti le sue cifre sembrano più piccole: in `SudokuGrid.tsx` la dimensione è moltiplicata per 1,1.
+- Uso: cifre date dei puzzle in **Bold**; titoli in Bold; testo e numeri di pagina in Regular. Nelle soluzioni, cifre date (traccia) in Roboto **Regular** grigio e cifre risolte in **Patrick Hand** (aspetto scritto a mano) nero e più grande, così si distinguono a colpo d'occhio.
+- **Patrick Hand** (Regular, licenza OFL) sta in `public/fonts/` con `PatrickHand-OFL.txt`. Si usa solo per le cifre risolte nelle soluzioni, mai nei puzzle. Le cifre risolte sono più grandi di quelle della traccia (vedi Leggibilità). Il tratto di Patrick Hand è sottile e a schermo appare grigio, quindi in `SudokuGrid.tsx` ogni cifra risolta è disegnata due volte con uno scarto di 0,3 pt (`HANDWRITTEN_EMBOLDEN`), sempre in nero `#000`: react-pdf ignora `stroke` sul testo dentro `<Svg>`.
 
 ## Margini KDP (senza bleed)
 
@@ -107,14 +107,15 @@ Le griglie devono essere quadrate. Con il titolo sopra sono centrate nello slot.
 **Leggibilità (verifiche obbligatorie):**
 
 - Cifre dei puzzle: 60% del lato della cella massima possibile. Con il pannello a lato la cella viene poi rimpicciolita fino a un rapporto cifra/cella di **0,66** (`PUZZLE_SIDE_CELL_RATIO` in `layout.ts`) senza cambiare la dimensione delle cifre, e lo spazio avanzato si divide in parti uguali sopra, tra e sotto i puzzle. Soglia minima **22 pt**: sotto questa soglia l'interfaccia mostra un avviso (si perde il posizionamento "large print"). Con i default (2 per pagina, titolo a lato) le cifre sono circa 22,4 pt, la cella circa 34 pt e la griglia circa 309 pt. Con 4 puzzle per pagina le cifre scendono a circa 17 pt e l'avviso compare.
-- Cifre delle soluzioni: 65% del lato della cella (le celle sono piccole). Minimo **11 pt**: sotto questa soglia il calcolo del layout lancia un errore.
+- Cifre delle soluzioni: le celle sono piccole (circa 18 pt con i default). Cifre della traccia al 72% della cella (circa 12,9 pt), cifre risolte all'85% (circa 15,2 pt). Minimo **11 pt** per le cifre della traccia: sotto questa soglia il calcolo del layout lancia un errore.
 
 **Linee della griglia:**
 
 - bordo esterno: 2,5 pt
 - bordi dei blocchi 3×3: 2 pt
 - linee delle celle: 0,75 pt, grigio scuro (es. `#555`)
-- tutto su sfondo bianco, testo nero puro (alto contrasto)
+- questi sono gli spessori pieni, validi per griglie di almeno 300 pt di lato (puzzle). Sotto i 300 pt scalano in proporzione al lato (`lineWidths` in `layout.ts`), con minimi di 1,25 / 1 / 0,5 pt. Le soluzioni (griglie di circa 163 pt) hanno quindi circa 1,35 / 1,08 / 0,5 pt.
+- tutto su sfondo bianco, testo nero puro (alto contrasto). Unica eccezione: nelle soluzioni le cifre della traccia (date) sono grigio scuro `#555`, così si distinguono sensibilmente dalle cifre risolte, che restano nere
 
 ## Struttura del PDF
 
