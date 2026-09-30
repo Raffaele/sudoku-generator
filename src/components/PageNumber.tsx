@@ -10,7 +10,10 @@ const BOTTOM = BASELINE_FROM_BOTTOM - FONT_SIZE * 0.2
 
 export function PageNumber({ pageNumber, margins }: { pageNumber: number; margins: PageMargins }) {
   return (
+    // `fixed`: il numero sta nel margine inferiore, fuori dall'area di contenuto; senza `fixed` react-pdf
+    // lo sposterebbe su una pagina nuova e vuota.
     <Text
+      fixed
       style={{
         position: 'absolute',
         bottom: BOTTOM,

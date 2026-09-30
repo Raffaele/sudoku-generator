@@ -1,14 +1,13 @@
 import { Page, Text } from '@react-pdf/renderer'
 import { FONT_BOLD } from '../fonts.ts'
-import { pageMargins } from '../layout.ts'
+import { PAGE_HEIGHT, PAGE_WIDTH, pageMargins } from '../layout.ts'
 import { PageNumber } from './PageNumber.tsx'
 
 export function DividerPage({ pageNumber, innerMargin }: { pageNumber: number; innerMargin: number }) {
   const margins = pageMargins(pageNumber, innerMargin)
   return (
     <Page
-      size="LETTER"
-      wrap={false}
+      size={[PAGE_WIDTH, PAGE_HEIGHT]}
       style={{
         justifyContent: 'center',
         alignItems: 'center',

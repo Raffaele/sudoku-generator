@@ -1,7 +1,7 @@
 import { Page, View } from '@react-pdf/renderer'
 import type { ReactNode } from 'react'
 import { FONT_REGULAR } from '../fonts.ts'
-import { pageMargins, type GridLayout } from '../layout.ts'
+import { PAGE_HEIGHT, PAGE_WIDTH, pageMargins, type GridLayout } from '../layout.ts'
 import { PageNumber } from './PageNumber.tsx'
 
 function chunk<T>(items: T[], size: number): T[][] {
@@ -25,8 +25,7 @@ export function GridPage<T>({ items, pageNumber, innerMargin, layout, renderItem
   const odd = pageNumber % 2 === 1
   return (
     <Page
-      size="LETTER"
-      wrap={false}
+      size={[PAGE_WIDTH, PAGE_HEIGHT]}
       style={{
         fontFamily: FONT_REGULAR,
         paddingTop: margins.top,

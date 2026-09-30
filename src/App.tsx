@@ -4,6 +4,7 @@ import { computeBookLayout, type BookLayout } from './layout.ts'
 import type { Sudoku } from './lib/sudoku-generator.ts'
 import { generatePuzzles, verifyBook } from './puzzles.ts'
 import { renderPdf } from './renderPdf.ts'
+import { verifyPdf } from './verifyPdf.ts'
 import './App.css'
 
 interface Result {
@@ -12,6 +13,8 @@ interface Result {
   layout: BookLayout
   /** URL del PDF già renderizzato (blob). */
   url: string
+  /** Problemi trovati dal controllo sul PDF finito (vuoto se tutto a posto). */
+  pdfProblems: string[]
 }
 
 type NumericKey = {
@@ -56,7 +59,8 @@ function App() {
         const book = generatePuzzles(config)
         verifyBook(book, config)
         const blob = await renderPdf({ book, config, layout })
-        setResult({ book, config, layout, url: URL.createObjectURL(blob) })
+        const pdfProblems = verifyPdf(new Uint8Array(await blob.arrayBuffer()), layout)
+        setResult({ book, config, layout, url: URL.createObjectURL(blob), pdfProblems })
       } catch (e) {
         setResult(null)
         setError(e instanceof Error ? e.message : String(e))
@@ -115,6 +119,11 @@ function App() {
             {layout.solutionGrid.cols}×{layout.solutionGrid.rows}, cifre{' '}
             {layout.solutionGrid.digitSize.toFixed(1)} pt
           </p>
+          {result.pdfProblems.map((p) => (
+            <p key={p} className="pdf-problem">
+              ✖ {p}
+            </p>
+          ))}
           {layout.warnings.map((w) => (
             <p key={w} className="warning">
               ⚠ {w}

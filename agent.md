@@ -133,6 +133,8 @@ src/
   lib/sudoku-generator.ts  esistente, non modificare
   config.ts            BookConfig, DEFAULT_CONFIG, validateConfig
   puzzles.ts           generazione con progressione e dedup, verifyBook (controlli sul contenuto)
+  verifyPdf.ts         controlli sul PDF prodotto (pagine, dimensioni, font)
+  renderPdf.ts         render del PDF in un Web Worker (pdf.worker.tsx)
   layout.ts            margini KDP, parità, calcolo cols×rows, dimensioni font, avvisi
   fonts.ts             registrazione dei font Roboto
   components/
@@ -165,10 +167,17 @@ Alla pressione di "Genera" l'app valida i parametri, calcola il layout (numero d
 - nessun puzzle duplicato
 - il numero di celle occupate segue la progressione configurata
 
-**PDF**, dopo il rendering (non ancora automatizzate, da fare a mano sul file scaricato):
+**PDF**, dopo il rendering:
 
+Automatici (`src/verifyPdf.ts`, eseguiti a ogni "Genera"; i problemi compaiono in rosso sopra l'anteprima):
+
+- numero di pagine uguale a quello calcolato dal layout (segnala pagine vuote o mancanti)
 - dimensione di tutte le pagine = 612 × 792 pt
-- **tutti i font incorporati** (`pdffonts`: colonna `emb` = `yes` per ogni font)
+- nessun font standard non incorporato (Helvetica, Times, Courier) e ogni font con il file incorporato
+
+Ancora da fare a mano sul file scaricato:
+
+- verifica con `pdffonts` (colonna `emb` = `yes` per ogni font), come conferma indipendente
 - nessun contenuto entro 0,25" dai bordi, e margine interno ≥ minimo KDP sul lato corretto per ogni pagina
 - numero di pagina presente e corretto su ogni pagina
 
@@ -178,4 +187,6 @@ Alla pressione di "Genera" l'app valida i parametri, calcola il layout (numero d
 - Non generare puzzle senza verificarne l'unicità.
 - Non stampare testo in italiano: il libro è per il mercato US.
 - Non aggiungere elementi decorativi, citazioni o immagini senza richiesta.
+- Non usare `wrap={false}` su `<Page>`: react-pdf smette di imporre l'altezza e ogni pagina si riduce all'altezza del suo contenuto (la pagina "Solutions" risultava alta 137 pt). Il formato si passa sempre con `size={[PAGE_WIDTH, PAGE_HEIGHT]}`.
+- Il numero di pagina sta nel margine inferiore, fuori dall'area di contenuto: deve essere `fixed`, altrimenti react-pdf crea una pagina vuota con solo il numero.
 - Non modificare `src/lib/sudoku-generator.ts` senza chiedere. Se serve qualcosa in più, crea un modulo separato che lo usa.
