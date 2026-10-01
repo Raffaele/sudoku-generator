@@ -66,7 +66,7 @@ export function PuzzlePage({ puzzles, pageNumber, innerMargin, layout, showDateT
             {showDateTime && (
               <View style={{ height: layout.footerHeight, justifyContent: 'flex-end' }}>
                 <Text style={{ fontFamily: FONT_REGULAR, fontSize: 11 }}>
-                  Date: ____________   Time: ____________
+                  Date: __________   Time to solve: __________
                 </Text>
               </View>
             )}

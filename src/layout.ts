@@ -47,8 +47,8 @@ const SOLUTION_TITLE_HEIGHT = 16
 const PANEL_GAP = 14
 const PANEL_MIN_WIDTH = 130
 export const PANEL_TITLE_HEIGHT = 36
-/** Altezza di una riga Date/Time: lascia spazio per scrivere. */
-export const PANEL_ROW_HEIGHT = 36
+/** Altezza di un blocco Date/Time: etichetta, spazio per scrivere e riga, più un po' di stacco dal blocco successivo. */
+export const PANEL_ROW_HEIGHT = 52
 
 /** Rapporto cifra/cella. Nelle soluzioni è più alto perché le celle sono piccole. */
 const PUZZLE_DIGIT_RATIO = 0.6

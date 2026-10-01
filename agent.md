@@ -10,7 +10,7 @@ La copertina e l'introduzione (pagina del titolo, copyright, regole) **non** fan
 ## Contesto di prodotto (decisioni già prese, non cambiarle senza chiedere)
 
 - **Mercato:** Amazon US. **Target:** senior e principianti. **Nicchia:** "Extra Large Print Easy Sudoku".
-- **Lingua del testo stampato:** inglese (`Sudoku 12`, `Solution 12`, `Solutions`, `Date`, `Time`).
+- **Lingua del testo stampato:** inglese (`Sudoku 12`, `Solution 12`, `Solutions`, `Date`, `Time to solve`).
 - **Formato:** 8,5" × 11" (612 × 792 pt), **senza bleed**, carta bianca, paperback.
 - **Quantità:** 306 puzzle, così "300+" è onesto e l'ultima pagina di soluzioni è piena (306 / 9 = 34).
 - **Default di impaginazione:** 2 puzzle per pagina, 9 soluzioni per pagina.
@@ -44,7 +44,7 @@ Esporta l'interfaccia `BookConfig`, `DEFAULT_CONFIG` con i default qui sotto e `
 | `cluesStart` / `cluesEnd`  | `45` / `36`                                           | Celle occupate nel primo e nell'ultimo puzzle, con interpolazione lineare arrotondata            |
 | `singlesOnly`              | `true`                                                | Solo tecniche base                                                                               |
 | `seed`                     | `2026`                                                | Seed principale. Seed del puzzle _i_ = derivato in modo deterministico da `seed` e `i`           |
-| `showDateTime`             | `true`                                                | Righe "Date" e "Time" per ogni puzzle                                                            |
+| `showDateTime`             | `true`                                                | Righe "Date" e "Time to solve" per ogni puzzle                                                  |
 | `solutionsDivider`         | `true`                                                | Pagina "Solutions" prima delle soluzioni                                                         |
 
 ## Font (requisito KDP: font incorporati)
@@ -99,7 +99,7 @@ Per un numero N di griglie per pagina, scegli la disposizione `cols × rows` (co
 - spazi fra le griglie (almeno 0,3")
 - due disposizioni per i puzzle, scelte automaticamente (vince quella con la griglia più grande, a parità quella con il titolo sopra):
   - **titolo sopra** la griglia (`Sudoku 12`, Bold) e riga Date/Time sotto. Usata con 1 puzzle per pagina e con 4 o più.
-  - **titolo a lato**: pannello accanto alla griglia con titolo e Date/Time (se `showDateTime`), senza linee su cui scrivere; il resto del pannello resta bianco. Usata con 2 puzzle per pagina, dove l'altezza è il vincolo e la larghezza avanza. Il pannello sta **sempre dal lato del margine interno** (pagine dispari: a sinistra; pagine pari: a destra), così la griglia resta dal lato esterno, più comodo per scrivere. Larghezza minima del pannello 130 pt; il pannello occupa tutta la larghezza che resta.
+  - **titolo a lato**: pannello accanto alla griglia con titolo e Date/Time (se `showDateTime`), ciascuno con la riga su cui scrivere (0,75 pt, `#555`) sotto l'etichetta e lunga 130 pt (`LINE_WIDTH` in `PuzzlePanel.tsx`); il resto del pannello resta bianco. Usata con 2 puzzle per pagina, dove l'altezza è il vincolo e la larghezza avanza. Il pannello sta **sempre dal lato del margine interno** (pagine dispari: a sinistra; pagine pari: a destra), così la griglia resta dal lato esterno, più comodo per scrivere. Larghezza minima del pannello 130 pt; il pannello occupa tutta la larghezza che resta.
 - le soluzioni usano sempre il titolo sopra
 
 Le griglie devono essere quadrate. Con il titolo sopra sono centrate nello slot.
