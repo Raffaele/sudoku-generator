@@ -1,16 +1,44 @@
 .app {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) 1fr;
   gap: 16px;
   height: 100vh;
   padding: 16px;
   box-sizing: border-box;
 }
 
+/* Parametri e messaggi a sinistra (scorrono da soli); l'anteprima occupa tutta l'altezza a destra. */
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.side h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.placeholder {
+  margin: auto;
+  color: #888;
+}
+
 .controls {
   display: flex;
   align-items: flex-end;
-  gap: 16px;
+  gap: 12px;
 }
 
 .controls label {
@@ -25,6 +53,7 @@
 
 .viewer {
   flex: 1;
+  min-height: 0;
   width: 100%;
   border: 1px solid #ccc;
 }

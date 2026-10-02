@@ -1,8 +1,7 @@
-import type { BookConfig } from './config.ts'
+import { FRONT_MATTER_PAGES, START_PAGE_NUMBER, introWarnings, type BookConfig } from './config.ts'
+import { maxPagesFor, resolveTrim } from './kdpLimits.ts'
 
 export const INCH = 72
-export const PAGE_WIDTH = 8.5 * INCH
-export const PAGE_HEIGHT = 11 * INCH
 
 const MARGIN_OUTER = 0.5 * INCH
 const MARGIN_TOP = 0.5 * INCH
@@ -65,7 +64,6 @@ const PUZZLE_DIGIT_MIN = 22
 const SOLUTION_DIGIT_MIN = 11
 
 const KDP_MIN_PAGES = 24
-const KDP_MAX_PAGES = 828
 /** [pagine massime, margine interno minimo in pollici] */
 const KDP_INNER_MARGINS: readonly (readonly [number, number])[] = [
   [150, 0.375],
@@ -114,6 +112,13 @@ export interface BookLayout {
   solutionPages: number
   /** Pagine di questo PDF. */
   pdfPages: number
+  /** Dimensioni della pagina, dal formato (`trimSize`). */
+  pageWidth: number
+  pageHeight: number
+  /** Pagine fisiche che precedono questo PDF nel libro finale. */
+  frontMatterPages: number
+  /** Numero stampato sulla prima pagina di questo PDF. */
+  startPageNumber: number
   /** Pagine del libro finale, introduzione compresa. */
   bookPages: number
   innerMargin: number
@@ -124,17 +129,17 @@ export interface BookLayout {
   warnings: string[]
 }
 
-function kdpMinInnerMargin(bookPages: number): number {
-  if (bookPages > KDP_MAX_PAGES) {
-    throw new Error(`Il libro ha ${bookPages} pagine: il massimo KDP è ${KDP_MAX_PAGES}`)
+function kdpMinInnerMargin(bookPages: number, maxPages: number): number {
+  if (bookPages > maxPages) {
+    throw new Error(`Il libro ha ${bookPages} pagine: il massimo per questo formato è ${maxPages}`)
   }
   const row = KDP_INNER_MARGINS.find(([maxPages]) => bookPages <= maxPages)
   return (row ? row[1] : KDP_INNER_MARGINS[0][1]) * INCH
 }
 
-/** La parità si basa sul numero di pagina reale: dispari = pagina destra, margine interno a sinistra. */
-export function pageMargins(pageNumber: number, innerMargin: number): PageMargins {
-  const odd = pageNumber % 2 === 1
+/** La parità si basa sulla pagina fisica nel libro finale: dispari = pagina destra, margine interno a sinistra. */
+export function pageMargins(physicalPage: number, innerMargin: number): PageMargins {
+  const odd = physicalPage % 2 === 1
   return {
     top: MARGIN_TOP,
     bottom: MARGIN_BOTTOM,
@@ -222,11 +227,18 @@ export function computeBookLayout(config: BookConfig): BookLayout {
   const solutionPages = Math.ceil(config.totalPuzzles / config.solutionsPerPage)
   const dividerPages = config.solutionsDivider ? 1 : 0
   const pdfPages = puzzlePages + dividerPages + solutionPages
-  const bookPages = config.startPageNumber - 1 + pdfPages
+  const frontMatterPages = FRONT_MATTER_PAGES
+  const startPageNumber = START_PAGE_NUMBER
+  const bookPages = frontMatterPages + pdfPages
 
-  const innerMargin = kdpMinInnerMargin(bookPages) + INNER_SAFETY
-  const contentWidth = PAGE_WIDTH - innerMargin - MARGIN_OUTER
-  const contentHeight = PAGE_HEIGHT - MARGIN_TOP - MARGIN_BOTTOM
+  const trim = resolveTrim(config.trimSize)
+  const pageWidth = trim.widthIn * INCH
+  const pageHeight = trim.heightIn * INCH
+  const maxPages = maxPagesFor(config.trimSize)
+
+  const innerMargin = kdpMinInnerMargin(bookPages, maxPages.max) + INNER_SAFETY
+  const contentWidth = pageWidth - innerMargin - MARGIN_OUTER
+  const contentHeight = pageHeight - MARGIN_TOP - MARGIN_BOTTOM
 
   const puzzleGrid = computeGridLayout({
     n: config.puzzlesPerPage,
@@ -263,9 +275,12 @@ export function computeBookLayout(config: BookConfig): BookLayout {
         `si perde il posizionamento "large print"`,
     )
   }
-  if (config.startPageNumber % 2 === 0) {
-    warnings.push('startPageNumber è pari: di norma un contenuto inizia su una pagina dispari')
+  if (!maxPages.verified) {
+    warnings.push(
+      `Limite di pagine KDP per questo formato non compilato in src/kdpLimits.ts: uso ${maxPages.max}`,
+    )
   }
+  warnings.push(...introWarnings(config))
   if (bookPages < KDP_MIN_PAGES) {
     warnings.push(`Il libro ha ${bookPages} pagine: il minimo KDP è ${KDP_MIN_PAGES}`)
   }
@@ -275,6 +290,10 @@ export function computeBookLayout(config: BookConfig): BookLayout {
     dividerPages,
     solutionPages,
     pdfPages,
+    pageWidth,
+    pageHeight,
+    frontMatterPages,
+    startPageNumber,
     bookPages,
     innerMargin,
     contentWidth,
@@ -282,5 +301,26 @@ export function computeBookLayout(config: BookConfig): BookLayout {
     puzzleGrid,
     solutionGrid,
     warnings,
+  }
+}
+
+/** Dove sta una pagina: formato, margine interno, pagina fisica (decide i margini specchiati) e numero stampato. */
+export interface PageSpec {
+  width: number
+  height: number
+  innerMargin: number
+  /** Posizione nel libro finale, da 1. */
+  physicalPage: number
+  /** Numero stampato; `null` = nessuno. */
+  label: string | number | null
+}
+
+export function pageSpec(layout: BookLayout, index: number, label: PageSpec['label']): PageSpec {
+  return {
+    width: layout.pageWidth,
+    height: layout.pageHeight,
+    innerMargin: layout.innerMargin,
+    physicalPage: layout.frontMatterPages + index + 1,
+    label,
   }
 }

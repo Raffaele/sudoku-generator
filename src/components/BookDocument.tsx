@@ -1,6 +1,7 @@
 import { Document } from '@react-pdf/renderer'
 import type { BookConfig } from '../config.ts'
-import type { BookLayout } from '../layout.ts'
+import { pageSpec, type BookLayout } from '../layout.ts'
+import { LOCALES } from '../locales/index.ts'
 import type { Sudoku } from '../lib/sudoku-generator.ts'
 import { DividerPage } from './DividerPage.tsx'
 import { PuzzlePage, type NumberedSudoku } from './PuzzlePage.tsx'
@@ -20,10 +21,12 @@ interface BookDocumentProps {
 
 export function BookDocument({ book, config, layout }: BookDocumentProps) {
   const numbered: NumberedSudoku[] = book.map((sudoku, i) => ({ number: i + 1, sudoku }))
-  const { startPageNumber } = config
-  const { innerMargin } = layout
-  const dividerPage = startPageNumber + layout.puzzlePages
-  const firstSolutionPage = dividerPage + layout.dividerPages
+  const labels = LOCALES[config.locale]
+  const { startPageNumber } = layout
+  // `index` = posizione nel PDF; il numero stampato parte da `startPageNumber`, la parità dei margini dalla pagina fisica.
+  const page = (index: number) => pageSpec(layout, index, startPageNumber + index)
+  const dividerIndex = layout.puzzlePages
+  const firstSolutionIndex = dividerIndex + layout.dividerPages
 
   return (
     <Document title="Sudoku" language="en">
@@ -31,20 +34,20 @@ export function BookDocument({ book, config, layout }: BookDocumentProps) {
         <PuzzlePage
           key={`puzzle-${p}`}
           puzzles={puzzles}
-          pageNumber={startPageNumber + p}
-          innerMargin={innerMargin}
+          page={page(p)}
           layout={layout.puzzleGrid}
           showDateTime={config.showDateTime}
+          labels={labels}
         />
       ))}
-      {config.solutionsDivider && <DividerPage pageNumber={dividerPage} innerMargin={innerMargin} />}
+      {config.solutionsDivider && <DividerPage page={page(dividerIndex)} title={labels.solutionsDivider} />}
       {chunk(numbered, config.solutionsPerPage).map((solutions, p) => (
         <SolutionPage
           key={`solution-${p}`}
           solutions={solutions}
-          pageNumber={firstSolutionPage + p}
-          innerMargin={innerMargin}
+          page={page(firstSolutionIndex + p)}
           layout={layout.solutionGrid}
+          labels={labels}
         />
       ))}
     </Document>

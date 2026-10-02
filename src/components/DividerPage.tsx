@@ -1,13 +1,13 @@
 import { Page, Text } from '@react-pdf/renderer'
 import { FONT_BOLD } from '../fonts.ts'
-import { PAGE_HEIGHT, PAGE_WIDTH, pageMargins } from '../layout.ts'
+import { pageMargins, type PageSpec } from '../layout.ts'
 import { PageNumber } from './PageNumber.tsx'
 
-export function DividerPage({ pageNumber, innerMargin }: { pageNumber: number; innerMargin: number }) {
-  const margins = pageMargins(pageNumber, innerMargin)
+export function DividerPage({ page, title }: { page: PageSpec; title: string }) {
+  const margins = pageMargins(page.physicalPage, page.innerMargin)
   return (
     <Page
-      size={[PAGE_WIDTH, PAGE_HEIGHT]}
+      size={[page.width, page.height]}
       style={{
         justifyContent: 'center',
         alignItems: 'center',
@@ -17,8 +17,8 @@ export function DividerPage({ pageNumber, innerMargin }: { pageNumber: number; i
         paddingRight: margins.right,
       }}
     >
-      <Text style={{ fontFamily: FONT_BOLD, fontSize: 40 }}>Solutions</Text>
-      <PageNumber pageNumber={pageNumber} margins={margins} />
+      <Text style={{ fontFamily: FONT_BOLD, fontSize: 40 }}>{title}</Text>
+      <PageNumber label={page.label} margins={margins} />
     </Page>
   )
 }

@@ -1,6 +1,7 @@
 import { Text, View } from '@react-pdf/renderer'
 import { FONT_BOLD, FONT_REGULAR } from '../fonts.ts'
-import type { GridLayout } from '../layout.ts'
+import type { GridLayout, PageSpec } from '../layout.ts'
+import type { Labels } from '../locales/index.ts'
 import { GridPage } from './GridPage.tsx'
 import type { NumberedSudoku } from './PuzzlePage.tsx'
 import { SudokuGrid } from './SudokuGrid.tsx'
@@ -10,22 +11,21 @@ const GIVEN_COLOR = '#555'
 
 interface SolutionPageProps {
   solutions: NumberedSudoku[]
-  pageNumber: number
-  innerMargin: number
+  page: PageSpec
   layout: GridLayout
+  labels: Labels
 }
 
-export function SolutionPage({ solutions, pageNumber, innerMargin, layout }: SolutionPageProps) {
+export function SolutionPage({ solutions, page, layout, labels }: SolutionPageProps) {
   return (
     <GridPage
       items={solutions}
-      pageNumber={pageNumber}
-      innerMargin={innerMargin}
+      page={page}
       layout={layout}
       renderItem={({ number, sudoku }) => (
         <>
           <View style={{ height: layout.titleHeight, justifyContent: 'center' }}>
-            <Text style={{ fontFamily: FONT_BOLD, fontSize: 10 }}>Solution {number}</Text>
+            <Text style={{ fontFamily: FONT_BOLD, fontSize: 10 }}>{labels.solutionTitle} {number}</Text>
           </View>
           <SudokuGrid
             values={sudoku.solution}

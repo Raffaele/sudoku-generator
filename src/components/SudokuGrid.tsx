@@ -1,4 +1,5 @@
 import { Line, Rect, Svg, Text } from '@react-pdf/renderer'
+import type { ReactNode } from 'react'
 import { FONT_BOLD, FONT_HANDWRITTEN } from '../fonts.ts'
 import { lineWidths } from '../layout.ts'
 import type { Grid } from '../lib/sudoku-generator.ts'
@@ -26,6 +27,17 @@ interface SudokuGridProps {
   givenFont?: string
   /** Colore delle cifre date. Le cifre risolte sono sempre nere. */
   givenColor?: string
+  /** Sfondo per indice di cella (0-80), disegnato sotto le linee. */
+  fills?: Record<number, string>
+  /** Elementi disegnati sopra la griglia; riceve le coordinate delle linee. */
+  overlay?: (geometry: GridGeometry) => ReactNode
+}
+
+export interface GridGeometry {
+  /** Coordinata della linea `i` (0-9), uguale per x e y. */
+  at: (i: number) => number
+  cell: number
+  outerWidth: number
 }
 
 export function SudokuGrid({
@@ -36,6 +48,8 @@ export function SudokuGrid({
   solvedDigitSize = digitSize,
   givenFont = FONT_BOLD,
   givenColor = '#000',
+  fills,
+  overlay,
 }: SudokuGridProps) {
   const { outer: OUTER_WIDTH, block: BLOCK_WIDTH, cell: CELL_WIDTH } = lineWidths(size)
   const pad = OUTER_WIDTH / 2
@@ -45,6 +59,10 @@ export function SudokuGrid({
 
   return (
     <Svg width={size} height={size}>
+      {fills &&
+        Object.entries(fills).map(([i, color]) => (
+          <Rect key={`f${i}`} x={at(Number(i) % 9)} y={at(Math.floor(Number(i) / 9))} width={cell} height={cell} fill={color} />
+        ))}
       {[1, 2, 4, 5, 7, 8].map((i) => (
         <Line key={`h${i}`} x1={at(0)} y1={at(i)} x2={at(9)} y2={at(i)} stroke={CELL_COLOR} strokeWidth={CELL_WIDTH} />
       ))}
@@ -73,6 +91,7 @@ export function SudokuGrid({
         const d = HANDWRITTEN_EMBOLDEN / 2
         return [digit(`${i}a`, -d, -d, '#000', FONT_HANDWRITTEN), digit(`${i}b`, d, d, '#000', FONT_HANDWRITTEN)]
       })}
+      {overlay?.({ at, cell, outerWidth: OUTER_WIDTH })}
     </Svg>
   )
 }

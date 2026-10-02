@@ -1,8 +1,9 @@
 import { Text, View } from '@react-pdf/renderer'
 import { FONT_BOLD, FONT_REGULAR } from '../fonts.ts'
-import type { GridLayout } from '../layout.ts'
+import type { GridLayout, PageSpec } from '../layout.ts'
 import type { Sudoku } from '../lib/sudoku-generator.ts'
 import { GridPage } from './GridPage.tsx'
+import type { Labels } from '../locales/index.ts'
 import { PuzzlePanel } from './PuzzlePanel.tsx'
 import { SudokuGrid } from './SudokuGrid.tsx'
 
@@ -13,18 +14,17 @@ export interface NumberedSudoku {
 
 interface PuzzlePageProps {
   puzzles: NumberedSudoku[]
-  pageNumber: number
-  innerMargin: number
+  page: PageSpec
   layout: GridLayout
   showDateTime: boolean
+  labels: Labels
 }
 
-export function PuzzlePage({ puzzles, pageNumber, innerMargin, layout, showDateTime }: PuzzlePageProps) {
+export function PuzzlePage({ puzzles, page, layout, showDateTime, labels }: PuzzlePageProps) {
   return (
     <GridPage
       items={puzzles}
-      pageNumber={pageNumber}
-      innerMargin={innerMargin}
+      page={page}
       layout={layout}
       renderItem={({ number, sudoku }, { odd }) => {
         const grid = (
@@ -48,6 +48,7 @@ export function PuzzlePage({ puzzles, pageNumber, innerMargin, layout, showDateT
             >
               <PuzzlePanel
                 number={number}
+                labels={labels}
                 width={layout.panelWidth}
                 height={layout.side}
                 showDateTime={showDateTime}
@@ -60,13 +61,13 @@ export function PuzzlePage({ puzzles, pageNumber, innerMargin, layout, showDateT
         return (
           <>
             <View style={{ height: layout.titleHeight, justifyContent: 'center' }}>
-              <Text style={{ fontFamily: FONT_BOLD, fontSize: 16 }}>Sudoku {number}</Text>
+              <Text style={{ fontFamily: FONT_BOLD, fontSize: 16 }}>{labels.puzzleTitle} {number}</Text>
             </View>
             {grid}
             {showDateTime && (
               <View style={{ height: layout.footerHeight, justifyContent: 'flex-end' }}>
                 <Text style={{ fontFamily: FONT_REGULAR, fontSize: 11 }}>
-                  Date: __________   Time to solve: __________
+                  {labels.date}: __________   {labels.timeToSolve}: __________
                 </Text>
               </View>
             )}
