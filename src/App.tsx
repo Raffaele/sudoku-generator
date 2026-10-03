@@ -55,7 +55,6 @@ const INTRO_TEXT_FIELDS: { key: Exclude<keyof IntroConfig, 'year'>; label: strin
   { key: 'volume', label: 'Volume' },
   { key: 'author', label: 'Autore' },
   { key: 'isbn', label: 'ISBN' },
-  { key: 'copyrightNotice', label: 'Nota di copyright' },
 ]
 
 const CUSTOM_TRIM = 'custom'

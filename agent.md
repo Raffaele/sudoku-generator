@@ -52,7 +52,7 @@ Esporta l'interfaccia `BookConfig`, `DEFAULT_CONFIG` con i default qui sotto e `
 | `showDateTime`            | `true`              | Righe "Date" e "Time to solve" per ogni puzzle                                                                                        |
 | `solutionsDivider`        | `true`              | Pagina "Solutions" prima delle soluzioni                                                                                              |
 | `includeIntro`            | `true`              | Genera le pagine introduttive (vedi "Introduzione"). Non cambia l'impaginazione del contenuto                  |
-| `intro`                   | vedi "Introduzione" | Testi variabili dell'introduzione: titolo, autore, anno, ISBN, nota di copyright                                                      |
+| `intro`                   | vedi "Introduzione" | Testi variabili dell'introduzione: titolo, autore, anno, ISBN                                                      |
 
 **Costanti (non sono parametri):** `START_PAGE_NUMBER` = 1 (numero stampato sulla prima pagina del contenuto) e `FRONT_MATTER_PAGES` = 4 (pagine fisiche dell'introduzione, in `src/config.ts`).
 
@@ -91,7 +91,6 @@ I testi fissi stanno in `src/content/intro.en.ts` (un file per lingua, come i `l
 | `author`          | `""`                                                                                                  | nome dell'autore o del marchio; vuoto → avviso                                                                |
 | `year`            | `2026`                                                                                                |                                                                                                               |
 | `isbn`            | `""`                                                                                                  | ISBN gratuito KDP; vuoto → avviso "ISBN mancante: da assegnare su KDP prima del file definitivo"              |
-| `copyrightNotice` | `""`                                                                                                  | clausola sulla riproduzione, **fornita dall'utente** da un modello standard; vuoto → avviso. Non scriverla tu |
 
 Titolo e sottotitolo devono coincidere con quelli della copertina e della scheda KDP.
 
@@ -99,7 +98,7 @@ Titolo e sottotitolo devono coincidere con quelli della copertina e della scheda
 
 Sempre **4 pagine** (numero pari: la prima pagina del contenuto cade così su una pagina destra). Stesso formato (`trimSize`), stessi margini specchiati e stessi font del contenuto. Pagine fisiche 1-4: la i è a destra, la ii a sinistra, e così via.
 
-**Pagina i — Titolo** (numero `i`), centrata:
+**Pagina i — Titolo** (nessun numero di pagina), centrata:
 
 - `badge`: Roboto Bold circa 20 pt, su una fascia o in un riquadro
 - `title`: Roboto Bold, il più grande possibile su una riga (circa 48-60 pt)
@@ -109,13 +108,15 @@ Sempre **4 pagine** (numero pari: la prima pagina del contenuto cade così su un
 - `author`: Roboto Regular circa 16 pt
 - in fondo alla pagina: `This book belongs to: ______________________` (Roboto Regular circa 14 pt, riga su cui scrivere come quelle di Date/Time)
 
-**Pagina ii — Copyright** (numero `ii`), testo in basso, Roboto Regular 10-11 pt, allineato a sinistra:
+**Pagina ii — Copyright** (nessun numero di pagina), testo in basso, Roboto Regular 10-11 pt, allineato a sinistra:
 
 ```
 {title in Title Case} – {badge in Title Case}, {volume}
 Copyright © {year} {author}. All rights reserved.
 
-{copyrightNotice}
+Do not copy, photocopy, or reproduce this book or any part of this book, in commercial or non-commercial settings, except as permitted below. It is also forbidden to copy, adapt, or reuse this book or any part of this book for use on websites or blogs.
+
+The only photocopying allowed is for personal, non-commercial use.
 
 Every sudoku has exactly one solution and can be solved with basic techniques (computer-verified).
 
@@ -140,6 +141,8 @@ NO GUESSING NEEDED
 ```
 
 Le tre righe in maiuscolo sono in Roboto Bold 16 pt, una per riga, con spazio fra l'una e l'altra.
+
+Impaginazione: titolo e testo in alto; la Figura 1 centrata nello spazio che resta; le tre righe in maiuscolo ancorate in basso, sopra il numero di pagina.
 
 **Pagina iv — Tips e What You'll Find in This Book** (numero `iv`). Titoli in Roboto Bold circa 22 pt, testo in Roboto Regular 15 pt; le parti tra `**` sono in Bold:
 
@@ -171,19 +174,19 @@ Se il testo della pagina iv non entra, riduci la Figura 2 fino a un minimo di 15
 
 Disegnate con `SudokuGrid` (stesse linee e stessi font dei puzzle), in bianco, nero e grigi, senza colori: la stampa interna è in bianco e nero.
 
-- **Figura 1 (pagina iii):** una griglia di esempio completa e grande (circa la larghezza dell'area di contenuto, massimo 320 pt), con alcune cifre date. Sono evidenziate in grigio chiaro (`#E6E6E6`) **una riga, una colonna e un box 3×3**, scelti in modo da non sovrapporsi troppo, così da mostrare le tre unità a cui si applica la regola.
+- **Figura 1 (pagina iii):** **tre griglie risolte, due sulla prima riga e la terza a capo, centrata** (generate per questo libro, non copiate da altre fonti), ciascuna con **una sola zona** evidenziata: una riga, una colonna, un box 3×3. Ogni zona è in grigio chiaro (`#E6E6E6`) con un contorno nero spesso (3 pt) che ne mostra l'estensione, e ha sotto la sua etichetta in Roboto Bold 16 pt: `row`, `column`, `3×3 box`. Le griglie sono il più grandi possibile compatibilmente con l'altezza della pagina (circa 200 pt di lato). Le cifre date (traccia) sono in Roboto Bold, le altre sono scritte a mano (Patrick Hand, 85% della cella) come nelle soluzioni. Così ciascuna zona mostra i numeri da 1 a 9 senza ripetizioni, cioè la regola descritta nel testo.
 - **Figura 2 (pagina iv):** esempio della tecnica "The only possible place" con il numero **3**. Griglia completa (circa 200-240 pt), con:
   - il box di destinazione con il bordo più spesso;
   - i 3 già presenti nelle righe e colonne che attraversano il box, evidenziati (cerchio o fondo grigio);
   - da ciascuno di questi 3 una linea grigia scura (`#555`, eventualmente tratteggiata) che attraversa il box lungo la sua riga o colonna, mostrando le celle bloccate;
-  - l'unica cella rimasta libera nel box con fondo grigio chiaro e il **3 in Patrick Hand**, come nelle soluzioni.
+  - l'unica cella rimasta libera nel box con fondo grigio chiaro e il **3 in Patrick Hand** all'85% della cella, come le cifre risolte nelle soluzioni.
     La figura deve far capire da sola che una riga o una colonna blocca una cella perché contiene già un 3.
 
-I dati delle due figure sono scritti a mano in `src/content/figures.ts`. Prima del rendering, `verifyFigures` controlla che nella Figura 2 la cella indicata sia **l'unica** del box dove il 3 può andare (considerando righe, colonne e cifre già presenti nel box), e che le cifre date non violino le regole. Se il controllo fallisce, errore.
+I dati delle due figure sono scritti a mano in `src/content/figures.ts`. Prima del rendering, `verifyFigures` controlla che nella Figura 2 la cella indicata sia **l'unica** del box dove il 3 può andare (considerando righe, colonne e cifre già presenti nel box), e che le cifre date non violino le regole. Controlla anche che la griglia della Figura 1 sia una soluzione completa e valida e che le cifre date coincidano con essa. Se un controllo fallisce, errore.
 
 ### Numerazione e unione
 
-- Tutte e 4 le pagine hanno il numero in numeri romani minuscoli (i, ii, iii, iv), stessa posizione e stesso stile dei numeri del contenuto.
+- Pagine i e ii senza numero; iii e iv con numeri romani minuscoli, stessa posizione e stesso stile dei numeri del contenuto.
 - `FRONT_MATTER_PAGES` vale 4 e il contenuto parte dal numero 1.
 - Il **libro completo** si ottiene unendo i due PDF con `pdf-lib`, nel browser. Il margine interno di introduzione e contenuto si calcola sul totale delle pagine fisiche del libro completo.
 
@@ -305,7 +308,7 @@ Comandi:
 - `yarn build`: controllo dei tipi e build di produzione
 - `yarn lint`
 
-Alla pressione di "Genera" l'app valida i parametri, calcola il layout (numero di pagine, pagine fisiche totali con l'introduzione, margine interno, dimensioni), genera i puzzle, esegue `verifyBook` e `verifyFigures` e mostra un riepilogo con gli eventuali avvisi (compresi ISBN, autore e nota di copyright mancanti).
+Alla pressione di "Genera" l'app valida i parametri, calcola il layout (numero di pagine, pagine fisiche totali con l'introduzione, margine interno, dimensioni), genera i puzzle, esegue `verifyBook` e `verifyFigures` e mostra un riepilogo con gli eventuali avvisi (compresi ISBN e autore mancanti).
 
 ## Verifiche
 
@@ -330,13 +333,13 @@ Ancora da fare a mano sul file scaricato:
 
 - verifica con `pdffonts` (colonna `emb` = `yes` per ogni font), come conferma indipendente
 - nessun contenuto entro 0,25" dai bordi, e margine interno ≥ minimo KDP sul lato corretto per ogni pagina
-- numero di pagina presente e corretto su ogni pagina (`i`-`iv` nell'introduzione; poi da 1)
+- numero di pagina presente e corretto su ogni pagina (nessuno su i e ii; `iii` e `iv`; poi da 1)
 - testi dell'introduzione identici a quelli di questo documento
 
 ## Cose da NON fare
 
 - Non usare i font standard del PDF (Helvetica, Times, Courier).
-- Non scrivere, riformulare o correggere i testi dell'introduzione, e non generare la clausola di copyright: arrivano dall'utente (vedi "Regola fondamentale sui testi").
+- Non scrivere, riformulare o correggere i testi dell'introduzione, compresa la nota di copyright (fissa, in 2 capoversi): arrivano dall'utente (vedi "Regola fondamentale sui testi").
 - Non generare puzzle senza verificarne l'unicità.
 - Non stampare testo in italiano nel libro attuale: è per il mercato US. Le altre lingue passano solo dai file in `src/locales/`.
 - Non scrivere etichette stampate direttamente nei componenti: usa il dizionario del `locale`.

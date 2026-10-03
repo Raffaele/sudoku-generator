@@ -9,11 +9,16 @@ export interface Segment {
 export const introEn = {
   belongsTo: 'This book belongs to:',
   rightsReserved: 'All rights reserved.',
+  copyrightNotice: [
+    'Do not copy, photocopy, or reproduce this book or any part of this book, in commercial or non-commercial settings, except as permitted below. It is also forbidden to copy, adapt, or reuse this book or any part of this book for use on websites or blogs.',
+    'The only photocopying allowed is for personal, non-commercial use.',
+  ],
   verified: 'Every sudoku has exactly one solution and can be solved with basic techniques (computer-verified).',
   publisher: 'Independently published',
   howToPlay: {
     title: 'How to Play',
     text: 'Add a number in every empty cell to obtain all the numbers from 1 to 9, without repeating, in every row, column and 3×3 box.',
+    figureLabels: { row: 'row', column: 'column', box: '3×3 box' },
     rules: ['NO MATH NEEDED', 'EXACTLY 1 CORRECT SOLUTION', 'NO GUESSING NEEDED'],
   },
   tips: {

@@ -60,12 +60,11 @@ export function IntroDocument({ config, layout, sizing = DEFAULT_INTRO_SIZING }:
 
   // Titolo: il più grande possibile su una riga (le maiuscole Bold larghe circa 0,68 em).
   const titleSize = Math.max(30, Math.min(60, contentWidth / (Math.max(intro.title.length, 1) * 0.68)))
-  const figure1Size = Math.min(320, contentWidth)
 
   return (
     <Document title={`${titleCase(intro.title)} – ${titleCase(intro.badge)}`} language="en">
       {/* i: titolo */}
-      <IntroPage page={page(0, 'i')}>
+      <IntroPage page={page(0, null)}>
         <View style={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', rowGap: 26 }}>
           <View style={{ borderWidth: 2, borderColor: '#000', paddingVertical: 8, paddingHorizontal: 22 }}>
             <Text style={{ fontFamily: FONT_BOLD, fontSize: 20 }}>{intro.badge}</Text>
@@ -89,13 +88,17 @@ export function IntroDocument({ config, layout, sizing = DEFAULT_INTRO_SIZING }:
       </IntroPage>
 
       {/* ii: copyright */}
-      <IntroPage page={page(1, 'ii')}>
+      <IntroPage page={page(1, null)}>
         <View style={{ flexGrow: 1, justifyContent: 'flex-end', rowGap: 10 }}>
           <View>
             <Text style={COPYRIGHT_TEXT}>{`${titleCase(intro.title)} – ${titleCase(intro.badge)}, ${intro.volume}`}</Text>
             <Text style={COPYRIGHT_TEXT}>{`Copyright © ${intro.year} ${intro.author}. ${t.rightsReserved}`}</Text>
           </View>
-          {intro.copyrightNotice !== '' && <Text style={COPYRIGHT_TEXT}>{intro.copyrightNotice}</Text>}
+          {t.copyrightNotice.map((paragraph) => (
+            <Text key={paragraph} style={COPYRIGHT_TEXT}>
+              {paragraph}
+            </Text>
+          ))}
           <Text style={COPYRIGHT_TEXT}>{t.verified}</Text>
           <View>
             <Text style={COPYRIGHT_TEXT}>{`ISBN: ${intro.isbn}`}</Text>
@@ -104,20 +107,24 @@ export function IntroDocument({ config, layout, sizing = DEFAULT_INTRO_SIZING }:
         </View>
       </IntroPage>
 
-      {/* iii: How to Play */}
+      {/* iii: How to Play. La figura sta al centro dello spazio fra testo e regole, che stanno in basso. */}
       <IntroPage page={page(2, 'iii')}>
-        <View style={{ rowGap: gap * 1.4 }}>
-          <Text style={{ fontFamily: FONT_BOLD, fontSize: 24 }}>{t.howToPlay.title}</Text>
-          <Text style={{ fontFamily: FONT_REGULAR, fontSize: 15, lineHeight: 1.35 }}>{t.howToPlay.text}</Text>
-          <View style={{ alignItems: 'center' }}>
-            <Figure1 size={figure1Size} />
+        <View style={{ flexGrow: 1 }}>
+          <View style={{ rowGap: gap }}>
+            <Text style={{ fontFamily: FONT_BOLD, fontSize: 24 }}>{t.howToPlay.title}</Text>
+            <Text style={{ fontFamily: FONT_REGULAR, fontSize: 15, lineHeight: 1.35 }}>{t.howToPlay.text}</Text>
           </View>
-          <View style={{ rowGap: 10 }}>
-            {t.howToPlay.rules.map((rule) => (
-              <Text key={rule} style={{ fontFamily: FONT_BOLD, fontSize: 16 }}>
-                {rule}
-              </Text>
-            ))}
+          <View style={{ flexGrow: 1, justifyContent: 'space-between' }}>
+            <View style={{ flexGrow: 1, justifyContent: 'center' }}>
+              <Figure1 width={contentWidth} labels={t.howToPlay.figureLabels} />
+            </View>
+            <View style={{ rowGap: 18, marginBottom: 24 }}>
+              {t.howToPlay.rules.map((rule) => (
+                <Text key={rule} style={{ fontFamily: FONT_BOLD, fontSize: 16 }}>
+                  {rule}
+                </Text>
+              ))}
+            </View>
           </View>
         </View>
       </IntroPage>

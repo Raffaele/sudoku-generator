@@ -18,7 +18,6 @@ export interface IntroConfig {
   author: string
   year: number
   isbn: string
-  copyrightNotice: string
 }
 
 export interface BookConfig {
@@ -68,7 +67,6 @@ export const DEFAULT_CONFIG: BookConfig = {
     author: '',
     year: 2026,
     isbn: '',
-    copyrightNotice: '',
   },
 }
 
@@ -78,7 +76,6 @@ export function introWarnings(c: BookConfig): string[] {
   const warnings: string[] = []
   if (!c.intro.author.trim()) warnings.push("Autore mancante: il campo resta vuoto nell'introduzione")
   if (!c.intro.isbn.trim()) warnings.push('ISBN mancante: da assegnare su KDP prima del file definitivo')
-  if (!c.intro.copyrightNotice.trim()) warnings.push('Nota di copyright mancante: va fornita dall\'utente')
   return warnings
 }
 
